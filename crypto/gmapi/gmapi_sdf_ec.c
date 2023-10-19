@@ -520,12 +520,6 @@ int ECDSA_SIG_set_ECCSignature(ECDSA_SIG *sig, const ECCSignature *ref)
 		GMAPIerr(GMAPI_F_ECDSA_SIG_SET_ECCSIGNATURE, ERR_R_BN_LIB);
 		goto end;
 	}
-	/* when using `sm2p256v1`, we need to check (s, r) length correct */
-	if (BN_num_bytes(r) != 256/8 || BN_num_bytes(s) != 256/8) {
-		GMAPIerr(GMAPI_F_ECDSA_SIG_SET_ECCSIGNATURE,
-			GMAPI_R_INVALID_SM2_SIGNATURE);
-		goto end;
-	}
 
 	/* set return value
 	 * `ECDSA_SIG_set0` should make sure that if failed, do not accept
