@@ -21,8 +21,7 @@
 
 
 #define sm2_print_bn(label,a) sm2_bn_print(stderr,0,0,label,a) // 这个不应该放在这里，应该放在测试文件中
-
-
+#define USE_SM2_GCACHE
 
 const SM2_BN SM2_P = {
 	0xffffffff, 0xffffffff, 0x00000000, 0xffffffff,
@@ -1039,9 +1038,77 @@ void sm2_jacobian_point_from_bytes(SM2_JACOBIAN_POINT *P, const uint8_t in[64])
 	/* should we check if sm2_jacobian_point_is_on_curve */
 }
 
+#ifdef USE_SM2_GCACHE
+void sm2_init_cache(SM2_JACOBIAN_POINT cache[][256], const SM2_JACOBIAN_POINT *G)
+{
+	int i, j, k, m;
+	SM2_JACOBIAN_POINT cache2[8], *P;
+	SM2_JACOBIAN_POINT _Q, *Q = &_Q;
+	SM2_JACOBIAN_POINT _T, *T = &_T;
+	sm2_jacobian_point_copy(T, G);
+
+	for (i = 0; i < 32; i++) {
+		for (k = 0; k < 8; k++) {
+			sm2_jacobian_point_copy(cache2 + k, T);
+			sm2_jacobian_point_dbl(T, T);
+			if (!sm2_bn_is_one(T->Z)) {
+				SM2_BN x, y;
+				sm2_jacobian_point_get_xy(T, x, y);
+				sm2_jacobian_point_set_xy(T, x, y);
+			}
+		}
+		for (j = 0; j < 256; j++) {
+			sm2_jacobian_point_set_infinity(Q);
+			for (m = j, k = 0; m && k < 8; k++) {
+				if (m & 0x1) {
+					P = cache2 + k;
+					sm2_jacobian_point_add(Q, Q, P);
+				}
+				m >>= 1;
+			}
+			if (!sm2_jacobian_point_is_at_infinity(Q) && !sm2_bn_is_one(Q->Z)) {
+				SM2_BN x, y;
+				sm2_jacobian_point_get_xy(Q, x, y);
+				sm2_jacobian_point_set_xy(Q, x, y);
+			}
+			sm2_jacobian_point_copy(&cache[i][j], Q);
+		}
+	}
+}
+
+void sm2_jacobian_point_fastmul_generator(SM2_JACOBIAN_POINT *R, const uint8_t k[32])
+{
+	static SM2_JACOBIAN_POINT SM2_JPOINT_GCACHE[32][256];
+	static int SM2_GCACHE_INITED = 0;
+	int i;
+	SM2_JACOBIAN_POINT *P;
+	SM2_JACOBIAN_POINT _Q, *Q = &_Q;
+
+	// Init the cache, size: 32 * 256
+	if (SM2_GCACHE_INITED == 0) {
+		sm2_init_cache(SM2_JPOINT_GCACHE, SM2_G);
+		SM2_GCACHE_INITED = 1;
+	}
+
+	sm2_jacobian_point_set_infinity(Q);
+	for (i = 31; i >= 0; i--) {
+		P = SM2_JPOINT_GCACHE[31 - i] + k[i];
+		sm2_jacobian_point_add(Q, Q, P);
+	}
+
+	sm2_jacobian_point_copy(R, Q);
+}
+#endif
+
 void sm2_jacobian_point_mul_generator(SM2_JACOBIAN_POINT *R, const SM2_BN k)
 {
+#ifdef USE_SM2_GCACHE
+	uint8_t _k[32];
+	sm2_bn_to_bytes(k, _k);
+	sm2_jacobian_point_fastmul_generator(R, _k);
+#else
 	sm2_jacobian_point_mul(R, k, SM2_G);
+#endif
 }
 
 /* R = t * P + s * G */
@@ -1208,11 +1275,15 @@ int sm2_point_mul_generator(SM2_POINT *R, const uint8_t k[32])
 	SM2_BN _k;
 	SM2_JACOBIAN_POINT _R;
 
+#ifdef USE_SM2_GCACHE
+	sm2_jacobian_point_fastmul_generator(&_R, k);
+#else
 	sm2_bn_from_bytes(_k, k);
 	sm2_jacobian_point_mul_generator(&_R, _k);
+	sm2_bn_clean(_k);
+#endif
 	sm2_jacobian_point_to_bytes(&_R, (uint8_t *)R);
 
-	sm2_bn_clean(_k);
 	return 1;
 }
 
