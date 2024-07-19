@@ -505,10 +505,10 @@ static const ZUC_UINT7 ZUC256_D[][16] = {
 };
 
 #define ZUC256_MAKEU31(a,b,c,d)				\
-	(((uint32_t)(a) << 23) |			\
-	 ((uint32_t)(b) << 16) |			\
-	 ((uint32_t)(c) <<  8) |			\
-	  (uint32_t)(d))
+	(((uint32_t)(a & 0xFF) << 23) |			\
+	 ((uint32_t)(b & 0xFF) << 16) |			\
+	 ((uint32_t)(c & 0xFF) <<  8) |			\
+	  (uint32_t)(d & 0xFF))
 
 
 static void zuc256_set_mac_key(ZUC_STATE *key, const uint8_t K[32],
@@ -521,32 +521,39 @@ static void zuc256_set_mac_key(ZUC_STATE *key, const uint8_t K[32],
 	const ZUC_UINT7 *D;
 	int i;
 
-	ZUC_UINT6 IV17 = IV[17] >> 2;
-	ZUC_UINT6 IV18 = ((IV[17] & 0x3) << 4) | (IV[18] >> 4);
-	ZUC_UINT6 IV19 = ((IV[18] & 0xf) << 2) | (IV[19] >> 6);
-	ZUC_UINT6 IV20 = IV[19] & 0x3f;
-	ZUC_UINT6 IV21 = IV[20] >> 2;
-	ZUC_UINT6 IV22 = ((IV[20] & 0x3) << 4) | (IV[21] >> 4);
-	ZUC_UINT6 IV23 = ((IV[21] & 0xf) << 2) | (IV[22] >> 6);
-	ZUC_UINT6 IV24 = IV[22] & 0x3f;
-
 	D = macbits/32 < 3 ? ZUC256_D[macbits/32] : ZUC256_D[3];
+	ZUC_UINT7 D0 = D[0];
+	ZUC_UINT7 D1 = D[1];
+	ZUC_UINT7 D2 = D[2];
+	ZUC_UINT7 D3 = D[3];
+	ZUC_UINT7 D4 = D[4];
+	ZUC_UINT7 D5 = D[5];
+	ZUC_UINT7 D6 = D[6];
+	ZUC_UINT7 D7 = D[7];
+	ZUC_UINT7 D8 = D[8];
+	ZUC_UINT7 D9 = D[9];
+	ZUC_UINT7 D10 = D[10];
+	ZUC_UINT7 D11 = D[11];
+	ZUC_UINT7 D12 = D[12];
+	ZUC_UINT7 D13 = D[13];
+	ZUC_UINT7 D14 = D[14];
+	ZUC_UINT7 D15 = D[15];
 	LFSR[0] = ZUC256_MAKEU31(K[0], D[0], K[21], K[16]);
 	LFSR[1] = ZUC256_MAKEU31(K[1], D[1], K[22], K[17]);
 	LFSR[2] = ZUC256_MAKEU31(K[2], D[2], K[23], K[18]);
 	LFSR[3] = ZUC256_MAKEU31(K[3], D[3], K[24], K[19]);
 	LFSR[4] = ZUC256_MAKEU31(K[4], D[4], K[25], K[20]);
-	LFSR[5] = ZUC256_MAKEU31(IV[0], (D[5] | IV17), K[5], K[26]);
-	LFSR[6] = ZUC256_MAKEU31(IV[1], (D[6] | IV18), K[6], K[27]);
-	LFSR[7] = ZUC256_MAKEU31(IV[10], (D[7] | IV19), K[7], IV[2]);
-	LFSR[8] = ZUC256_MAKEU31(K[8], (D[8] | IV20), IV[3], IV[11]);
-	LFSR[9] = ZUC256_MAKEU31(K[9], (D[9] | IV21), IV[12], IV[4]);
-	LFSR[10] = ZUC256_MAKEU31(IV[5], (D[10] | IV22), K[10], K[28]);
-	LFSR[11] = ZUC256_MAKEU31(K[11], (D[11] | IV23), IV[6], IV[13]);
-	LFSR[12] = ZUC256_MAKEU31(K[12], (D[12] | IV24), IV[7], IV[14]);
+	LFSR[5] = ZUC256_MAKEU31(IV[0], (D[5] | IV[17] & 0x3F), K[5], K[26]);
+	LFSR[6] = ZUC256_MAKEU31(IV[1], (D[6] | IV[18] & 0x3F), K[6], K[27]);
+	LFSR[7] = ZUC256_MAKEU31(IV[10], (D[7] | IV[19] & 0x3F), K[7], IV[2]);
+	LFSR[8] = ZUC256_MAKEU31(K[8], (D[8] | IV[20] & 0x3F), IV[3], IV[11]);
+	LFSR[9] = ZUC256_MAKEU31(K[9], (D[9] | IV[21] & 0x3F), IV[12], IV[4]);
+	LFSR[10] = ZUC256_MAKEU31(IV[5], (D[10] | IV[22] & 0x3F), K[10], K[28]);
+	LFSR[11] = ZUC256_MAKEU31(K[11], (D[11] | IV[23] & 0x3F), IV[6], IV[13]);
+	LFSR[12] = ZUC256_MAKEU31(K[12], (D[12] | IV[24] & 0x3F), IV[7], IV[14]);
 	LFSR[13] = ZUC256_MAKEU31(K[13], D[13], IV[15], IV[8]);
-	LFSR[14] = ZUC256_MAKEU31(K[14], (D[14] | (K[31] >> 4)), IV[16], IV[9]);
-	LFSR[15] = ZUC256_MAKEU31(K[15], (D[15] | (K[31] & 0x0F)), K[30], K[29]);
+	LFSR[14] = ZUC256_MAKEU31(K[14], (D[14] | ((K[31] >> 4) & 0xF)), IV[16], IV[9]);
+	LFSR[15] = ZUC256_MAKEU31(K[15], (D[15] | (K[31] & 0xF)), K[30], K[29]);
 
 	R1 = 0;
 	R2 = 0;
