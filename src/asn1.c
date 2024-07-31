@@ -221,7 +221,7 @@ int asn1_length_from_der(size_t *len, const uint8_t **in, size_t *inlen)
 	// check if the left input is enough for reading (d,dlen)
 	if (*inlen < *len) {
 		error_print();
-		return -2; // Special error for test_asn1_length() // TODO: fix asn1test.c test vector 			
+		return -2; // Special error for test_asn1_length() // TODO: fix asn1test.c test vector
 	}
 	return 1;
 }
@@ -411,11 +411,8 @@ int asn1_any_to_der(const uint8_t *a, size_t alen, uint8_t **out, size_t *outlen
 	}
 
 	if (!a) {
-		if (a) {
-			error_print();
-			return -1;
-		}
-		return 0;
+		error_print();
+		return -1;
 	}
 
 	if (out && *out) {
@@ -1157,7 +1154,7 @@ int asn1_object_identifier_print(FILE *fp, int format, int indent, const char *l
 		for (i = 0; i < nodes_cnt - 1; i++) {
 			fprintf(fp, "%d.", (int)nodes[i]);
 		}
-		fprintf(fp, "%d)", nodes[i]);
+		fprintf(fp, "%d)", (int)nodes[i]);
 	}
 	fprintf(fp, "\n");
 	return 1;
