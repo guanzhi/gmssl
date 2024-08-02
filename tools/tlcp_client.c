@@ -15,6 +15,9 @@
 #include <gmssl/tls.h>
 #include <gmssl/x509.h>
 #include <gmssl/error.h>
+#ifndef WIN32
+	#include <sys/select.h>
+#endif
 
 
 #define TIMEOUT_SECONDS 1

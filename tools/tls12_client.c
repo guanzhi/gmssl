@@ -14,6 +14,9 @@
 #include <stdlib.h>
 #include <gmssl/tls.h>
 #include <gmssl/error.h>
+#ifndef WIN32
+	#include <sys/select.h>
+#endif
 
 
 static int client_ciphers[] = { TLS_cipher_ecdhe_sm4_cbc_sm3 };
