@@ -13,6 +13,9 @@
 #include <stdlib.h>
 #include <gmssl/error.h>
 #include <immintrin.h>
+#if defined(__GNUC__) && (__GNUC__ > 4 || (__GNUC__ == 4 && __GNUC_MINOR__ >= 6))
+#include <x86intrin.h>
+#endif
 
 int rdrand_bytes(uint8_t *buf, size_t buflen)
 {
