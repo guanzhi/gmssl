@@ -38,7 +38,7 @@ const char *asn1_tag_name(int tag)
 	}
 
 	switch (tag & 0xc0) {
-	case ASN1_TAG_CONTENT_SPECIFIC: return asn1_tag_index[tag & 0xe0];
+	case ASN1_TAG_CONTENT_SPECIFIC: return asn1_tag_index[tag & 0x1f];
 	case ASN1_TAG_APPLICATION: return "Application";
 	case ASN1_TAG_PRIVATE: return "Private";
 	}
