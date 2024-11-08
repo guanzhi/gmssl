@@ -132,6 +132,6 @@ end:
 void SKF_METHOD_free(SKF_METHOD *meth)
 {
 	if (meth)
-		free(meth->dso);
+		dylib_close_library(meth->dso);
 	free(meth);
 }
