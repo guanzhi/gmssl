@@ -1,0 +1,39 @@
+name: CMake-OpenHarmony
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+    branches: [master]
+
+env:
+  # Customize the CMake build type here (Release, Debug, RelWithDebInfo, etc.)
+  BUILD_TYPE: Release
+
+jobs:
+  build:
+    # The CMake configure and build commands are platform agnostic and should work equally well on Windows or Mac.
+    # You can convert this to a matrix build if you need cross-platform coverage.
+    # See: https://docs.github.com/en/free-pro-team@latest/actions/learn-github-actions/managing-complex-workflows#using-a-build-matrix
+    strategy:
+      matrix:
+        os: [ubuntu-latest]
+        target: [arm64-v8a, armeabi-v7a, x86_64]
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Setup OpenHarmony SDK
+        uses: openharmony-rs/setup-ohos-sdk@v0.1
+        id: setup-ohos
+        with:
+          version: "5.0"
+
+      - name: Build
+        # Build your program with the given configuration
+        run: |
+          mkdir ${{github.workspace}}/build
+          cd ${{github.workspace}}/build
+          cmake .. -DCMAKE_TOOLCHAIN_FILE=${{steps.setup-ohos.outputs.ohos_sdk_native}}/build/cmake/ohos.toolchain.cmake -DOHOS_ARCH=${{matrix.target}}
+          make
