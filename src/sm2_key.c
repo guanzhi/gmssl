@@ -89,7 +89,6 @@ int sm2_key_print(FILE *fp, int fmt, int ind, const char *label, const SM2_KEY *
 int sm2_public_key_to_der(const SM2_KEY *key, uint8_t **out, size_t *outlen)
 {
 	uint8_t octets[65];
-	size_t len = 0;
 
 	if (!key) {
 		return 0;
