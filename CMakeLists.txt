@@ -559,7 +559,7 @@ target_include_directories(gmssl PUBLIC
 
 
 if (WIN32)
-	target_link_libraries(gmssl -lws2_32)
+	target_link_libraries(gmssl PRIVATE ws2_32)
 elseif (APPLE)
 	if (ENABLE_SDF)
 		target_link_libraries(gmssl dl)
