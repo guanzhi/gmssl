@@ -3,15 +3,21 @@ if (CMAKE_VERSION VERSION_LESS "3.0")
 else()
 	cmake_minimum_required(VERSION 3.6)
 endif()
-project(GmSSL C)
 
-SET(CMAKE_PROJECT_HOMEPAGE_URL "http://gmssl.org")
+file(STRINGS "${CMAKE_CURRENT_SOURCE_DIR}/include/gmssl/version.h" _gmssl_version_h_contents REGEX "#define GMSSL_VERSION_STR")
+string(REGEX MATCH "\"GmSSL [^\"]*" _gmssl_version ${_gmssl_version_h_contents})
+string(REGEX REPLACE ".* ([0-9]+\\.[0-9]+\\.[0-9]+) (.*)" "\\1-\\2" _gmssl_version ${_gmssl_version})
+unset(_gmssl_version_h_contents)
+
+string(REGEX REPLACE "([0-9]+\.[0-9]+\.[0-9]+).+" "\\1" _gmssl_version_sem "${_gmssl_version}")
+project(GmSSL
+	VERSION ${_gmssl_version_sem}
+	HOMEPAGE_URL "http://gmssl.org"
+	LANGUAGES C)
 
 set(LIBRARY_OUTPUT_PATH ${PROJECT_BINARY_DIR}/bin)
 set(EXECUTABLE_OUTPUT_PATH ${PROJECT_BINARY_DIR}/bin)
 SET(CMAKE_MODULE_PATH "${CMAKE_MODULE_PATH};${CMAKE_CURRENT_SOURCE_DIR}/cmake")
-
-include_directories(include)
 
 if(MSVC)
 	#add_compile_options(/O2) # conflict with CI /0d (not optimized)
@@ -518,7 +524,7 @@ if (ENABLE_SKF)
 		src/skf/skf_wisec.c)
 	list(APPEND tools tools/skfutil.c)
 	add_library(skf_dummy SHARED src/skf/skf_dummy.c)
-	set_target_properties(skf_dummy PROPERTIES VERSION 3.1 SOVERSION 3)
+	set_target_properties(skf_dummy PROPERTIES VERSION ${PROJECT_VERSION} SOVERSION ${PROJECT_VERSION_MAJOR})
 endif()
 
 if (ENABLE_SDF)
@@ -549,8 +555,12 @@ if (CMAKE_C_COMPILER_ID MATCHES "MSVC")
 endif()
 
 add_library(gmssl ${src})
+add_library(GmSSL::${PROJECT_NAME} ALIAS gmssl)
 
-
+target_include_directories(gmssl PUBLIC
+	$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>
+	$<INSTALL_INTERFACE:include>
+)
 
 
 
@@ -577,11 +587,41 @@ endif()
 
 set(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/lib")
 
-SET_TARGET_PROPERTIES(gmssl PROPERTIES VERSION 3.1 SOVERSION 3)
+include(GNUInstallDirs)
+set(GmSSL_CMAKE_DIR ${CMAKE_INSTALL_LIBDIR}/cmake/${PROJECT_NAME})
 
+set(_targets_export_name ${PROJECT_NAME}Targets)
+include(CMakePackageConfigHelpers)
+configure_package_config_file(
+	${PROJECT_SOURCE_DIR}/cmake/${PROJECT_NAME}Config.cmake.in
+	${PROJECT_BINARY_DIR}/${PROJECT_NAME}Config.cmake
+	INSTALL_DESTINATION ${GmSSL_CMAKE_DIR})
+write_basic_package_version_file(
+	${PROJECT_BINARY_DIR}/${PROJECT_NAME}ConfigVersion.cmake
+	VERSION ${PROJECT_VERSION}
+	COMPATIBILITY SameMajorVersion)
+install(
+	FILES
+		${PROJECT_BINARY_DIR}/${PROJECT_NAME}Config.cmake
+		${PROJECT_BINARY_DIR}/${PROJECT_NAME}ConfigVersion.cmake
+	DESTINATION ${GmSSL_CMAKE_DIR})
 
-install(TARGETS gmssl ARCHIVE DESTINATION lib LIBRARY DESTINATION lib RUNTIME DESTINATION bin)
-install(DIRECTORY ${CMAKE_SOURCE_DIR}/include/gmssl DESTINATION include)
+install(DIRECTORY ${CMAKE_SOURCE_DIR}/include/gmssl DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
+install(TARGETS gmssl
+	EXPORT ${_targets_export_name}
+	ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
+	LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+	RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
+set_target_properties(gmssl PROPERTIES
+	VERSION ${PROJECT_VERSION} SOVERSION ${PROJECT_VERSION_MAJOR}
+	EXPORT_NAME ${PROJECT_NAME})
+export(EXPORT ${_targets_export_name}
+	NAMESPACE GmSSL::
+	FILE "${CMAKE_CURRENT_BINARY_DIR}/cmake/${_targets_export_name}.cmake")
+
+install(EXPORT ${_targets_export_name}
+	NAMESPACE GmSSL::
+	DESTINATION ${GmSSL_CMAKE_DIR})
 
 if(UNIX AND NOT APPLE)
 	message(STATUS "Detected Linux, configuring /etc/ld.so.conf.d/gmssl.conf")
@@ -642,9 +682,11 @@ endif()
 # Install the STGZ package
 #	./GmSSL-<version>-Linux.sh --prefix=/usr/local
 #
-set(CPACK_PACKAGE_NAME "GmSSL")
+# The `-DEV` part is important
+string(REGEX REPLACE "([0-9]+\.[0-9]+)\.([0-9]+.*)" "\\2" CPACK_PACKAGE_VERSION_PATCH "${_gmssl_version}")
 set(CPACK_PACKAGE_VENDOR "GmSSL develop team")
-set(CPACK_PACKAGE_VERSION "3.1.2-Dev")
-set(CPACK_PACKAGE_DESCRIPTION_FILE ${PROJECT_SOURCE_DIR}/README.md)
+set(CPACK_RESOURCE_FILE_LICENSE ${PROJECT_SOURCE_DIR}/LICENSE)
+set(CPACK_RESOURCE_FILE_README ${PROJECT_SOURCE_DIR}/README.md)
+set(CPACK_GENERATOR TGZ) # default generator, can be overwritten by `cpack -G`
 set(CPACK_NSIS_MODIFY_PATH ON)
 include(CPack)
