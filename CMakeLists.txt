@@ -653,8 +653,7 @@ endif()
 
 if (CMAKE_C_COMPILER_ID MATCHES "MSVC")
 	set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT gmssl-bin)
-	set(CMAKE_INSTALL_PREFIX "C:/Program Files/GmSSL") # change by `cmake -DCMAKE_INSTALL_PREFIX=C:\path\to\install`
-	# run `set path=%path%;C:\Program Files\GmSSL\bin`
+
 	add_compile_definitions(_CRT_SECURE_NO_WARNINGS)
 
 	target_compile_options(gmssl PRIVATE /utf-8)
