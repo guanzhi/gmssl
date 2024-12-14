@@ -549,7 +549,7 @@ endif()
 
 option(BUILD_SHARED_LIBS "Build using shared libraries" ON)
 
-if (CMAKE_C_COMPILER_ID MATCHES "MSVC")
+if (MSVC)
 	message(STATUS "CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS")
 	set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS ON) # set before add_library
 endif()
@@ -651,7 +651,7 @@ if (NOT ${CMAKE_SYSTEM_NAME} STREQUAL "iOS")
 	install(TARGETS gmssl-bin RUNTIME DESTINATION bin)
 endif()
 
-if (CMAKE_C_COMPILER_ID MATCHES "MSVC")
+if (MSVC)
 	set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT gmssl-bin)
 
 	add_compile_definitions(_CRT_SECURE_NO_WARNINGS)
