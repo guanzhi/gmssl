@@ -21,7 +21,7 @@ int file_size(FILE *fp, size_t *size)
 	int fd;
 	struct stat st;
 
-#ifdef WIN32
+#ifdef _WIN32
 	fd = _fileno(fp);
 #else
 	fd = fileno(fp);

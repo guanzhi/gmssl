@@ -16,7 +16,7 @@
 #include <gmssl/error.h>
 
 
-#ifdef WIN32
+#ifdef _WIN32
 int tls_socket_lib_init(void)
 {
 	WORD wVersion = MAKEWORD(2, 2);

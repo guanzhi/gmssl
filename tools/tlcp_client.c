@@ -256,7 +256,7 @@ bad:
 		FD_SET(conn.sock, &fds);
 
 		if (read_stdin) {
-#ifdef WIN32
+#ifdef _WIN32
 			if (fgets(buf, sizeof(buf), stdin)) {
 				if (tls_send(&conn, (uint8_t *)buf, strlen(buf), &len) != 1) {
 					fprintf(stderr, "%s: send error\n", prog);
@@ -266,9 +266,9 @@ bad:
 				if (!feof(stdin)) {
 					fprintf(stderr, "%s: length of input line exceeds buffer size\n", prog);
 					goto end;
-				}	
+				}
 				read_stdin = 0;
-			}	
+			}
 #else
 			FD_SET(STDIN_FILENO, &fds); // in POSIX, first arg type is int
 #endif
@@ -278,7 +278,7 @@ bad:
 			goto end;
 		}
 
-#ifdef WIN32
+#ifdef _WIN32
 #else
 		if (read_stdin && FD_ISSET(STDIN_FILENO, &fds)) {
 

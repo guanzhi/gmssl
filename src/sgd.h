@@ -56,14 +56,14 @@
 #define SGD_ZUC_EIA3		(SGD_ZUC|SGD_EIA3)
 
 /* public key usage */
-#define SGD_PK_SIGN		0x0100 // FIXME: correct?        
-#define SGD_PK_DH		0x0200 // FIXME: correct?        
-#define SGD_PK_ENC		0x0400 // FIXME: correct?        
+#define SGD_PK_SIGN		0x0100 // FIXME: correct?
+#define SGD_PK_DH		0x0200 // FIXME: correct?
+#define SGD_PK_ENC		0x0400 // FIXME: correct?
 
 /* public key types */
 #define SGD_RSA			0x00010000
-#define SGD_RSA_SIGN		(SGD_RSA|SGD_PK_SIGN) // FIXME: correct?	
-#define SGD_RSA_ENC		(SGD_RSA|SGD_PK_ENC) // FIXME: correct?		
+#define SGD_RSA_SIGN		(SGD_RSA|SGD_PK_SIGN) // FIXME: correct?
+#define SGD_RSA_ENC		(SGD_RSA|SGD_PK_ENC) // FIXME: correct?
 #define SGD_SM2			0x00020100
 #define SGD_SM2_1		0x00020200 // SM2 Signature Scheme
 #define SGD_SM2_2		0x00020400 // SM2 Key Exchange Protocol
@@ -275,7 +275,7 @@ typedef int32_t			SGD_BOOL;
 #define SGD_STATUS_READY		0x00000202
 #define SGD_STATUS_EXCEPTION		0x00000203
 
-#ifdef WIN32
+#ifdef _WIN32
 #include <windows.h>
 #else
 typedef signed char		INT8;
@@ -318,7 +318,7 @@ typedef HANDLE HCONTAINER;
 #define TRUE			0x00000001
 #endif
 
-#ifdef WIN32
+#ifdef _WIN32
 #define DEVAPI __stdcall
 #else
 #define DEVAPI

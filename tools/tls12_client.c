@@ -159,7 +159,7 @@ bad:
 
 		FD_ZERO(&fds);
 		FD_SET(conn.sock, &fds);
-#ifdef WIN32
+#ifdef _WIN32
 #else
 		FD_SET(fileno(stdin), &fds);
 #endif
@@ -178,14 +178,13 @@ bad:
 				fwrite(buf, 1, len, stdout);
 				fflush(stdout);
 
-				// FIXME: change `tls_recv` API or functions			
+				// FIXME: change `tls_recv` API or functions
 				if (conn.datalen == 0) {
 					break;
 				}
 			}
-
 		}
-#ifdef WIN32
+#ifdef _WIN32
 #else
 		if (FD_ISSET(fileno(stdin), &fds)) {
 			memset(send_buf, 0, sizeof(send_buf));
