@@ -23,27 +23,16 @@ GmSSL是由北京大学自主开发的国产商用密码开源库，实现了对
 
 GmSSL 3 采用了cmake构建系统。下载源代码后将其解压缩，进入源码目录，执行：
 
-```bash
-mkdir build
-cd build
-cmake ..
-make
-make test
-sudo make install
+```shell
+cmake -B build # -G "Ninja Multi-Config"
+cmake --build build
+ctest --test-dir build
+sudo cmake --install build # --prefix /path
 ```
 
-在`make install`完成后，GmSSL会在默认安装目录中安装`gmssl`命令行工具，在头文件目录中创建`gmssl`目录，并且在库目录中安装`libgmssl.a`、`libgmssl.so`等库文件。
+可以手动指定generator，比如`cmake -B build -G Ninja`以指定Ninja作为generator。
 
-### Visual Studio环境编译
-
-在Visual Studio命令提示符下执行：
-
-```bash
-mkdir build
-cd build
-cmake .. -G "NMake Makefiles" -DWIN32=ON
-nmake
-```
+在`cmake --install`完成后，GmSSL会在默认安装目录中安装`gmssl`命令行工具，在头文件目录中创建`gmssl`目录，并且在库目录中安装`libgmssl.a`、`libgmssl.so`等库文件。
 
 ## 主要功能
 
@@ -97,7 +86,7 @@ GmSSL 3.0版本重写了所有的代码并改变了原有API，因此当前GmSSL
 
 ```
 cmake .. -DENABLE_TEST_SPEED=ON
-make
+cmake --build .
 ./bin/sm4test; ./bin/sm3test; ./bin/sm2_signtest; ./bin/sm2_enctest; ./bin/sm9test; ./bin/zuctest
 ```
 

@@ -6,22 +6,20 @@
 
 GmSSL当前版本采用CMake构建系统。由于CMake是一个跨平台的编译、安装工具，因此GmSSL可以在大多数主流操作系统上编译、安装和运行。GmSSL项目官方测试了Windows (包括Visual Stduio和Cygwin)、Linux、Mac、Android和iOS这几个主流操作系统上的编译，并通过GitHub的CI工作流对提交的最新代码进行自动化的编译测试。
 
-和其他基于CMake的开源项目类似，GmSSL的构建过程主要包含配置、编译、测试、安装这几个步骤。以Linux操作系统环境为例，在下载并解压GmSSL源代码后，进入源代码目录，执行如下命令：
+和其他基于CMake的开源项目类似，GmSSL的构建过程主要包含配置、编译、测试、安装这几个步骤。在下载并解压GmSSL源代码后，进入源代码目录，执行如下命令：
 
 ```bash
-mkdir build
-cd build
-cmake ..
-make
-make test
-sudo make install
+cmake -B build # -G "Ninja Multi-Config"
+cmake --build build
+ctest --test-dir build
+sudo cmake --install build # --prefix /path
 ```
 
 就可以完成配置、编译、测试和安装。
 
-在执行`make`编译成功后，在`build/bin`目录下会生成项目的可执行文件和库文件。对于密码工具来说，在安装使用之前通过`make test`进行测试是重要的一步，如果测试失败，那么不应该使用这个软件。在发生某个测试错误后，可以执行`build/bin`下的具体某个测试命令行，如`sm4test`，这样可以看到具体的错误打印信息。
+在执行`cmake --build`编译成功后，在`build/bin`目录下会生成项目的可执行文件和库文件。对于密码工具来说，在安装使用之前通过`ctest`进行测试是重要的一步，如果测试失败，那么不应该使用这个软件。在发生某个测试错误后，可以执行`build/bin`下的具体某个测试命令行，如`sm4test`，这样可以看到具体的错误打印信息。
 
-执行`sudo make install`，安装完成后，可以命令行中调用`gmssl`命令行工具。在Linux和Mac环境下，头文件通常被安装在`/usr/local/include/gmssl`目录下，库文件被安装在`/usr/local/lib`目录下。
+执行`sudo cmake --install`，安装完成后，可以命令行中调用`gmssl`命令行工具。在Linux和Mac环境下，头文件通常被安装在`/usr/local/include/gmssl`目录下，库文件被安装在`/usr/local/lib`目录下。
 
 ## 项目源代码
 
@@ -82,7 +80,7 @@ GmSSL包含了针对特定硬件和处理指令集的密码算法优化实现，
 
 ```bash
 cmake .. -DENABLE_BROKEN_CRYPTO=ON
-make
+cmake --build .
 ```
 
 重新编译后，加入GmSSL库文件的算法包括：
@@ -96,28 +94,26 @@ make
 
 CMake支持通过指定不同的构建系统生成器（Generator），生成不同类型的Makefile。在Windows和Visual Studio环境下，CMake即可以生成常规的Visual Studio解决方案(.sln)文件，在Visual Studio图形界面中完成编译，也可以生成类似于Linux环境下的Makefile文件，在命令行环境下完成编译和测试。
 
-### 生成Makefile编译
+### 生成Makefile/Ninja编译
 
 在安装完Visual Studio之后，在启动菜单栏中会出现Visual Studio菜单目录，其中包含x64 Native Tools Command Prompt for VS 2022等多个终端命令行环境菜单项。
 
-```bash
+```pwsh
 C:\Program Files\Microsoft Visual Studio\2022\Community>cd /path/to/gmssl
-mkdir build
-cd build
-cmake .. -G "NMake Makefiles"
-nmake
-nmake test
+cmake -B build -G "NMake Makefiles"
+# cmake -B build -G "Ninja"
+ctest --test-dir build
 ```
 
 在编译完成后直接执行安装会报权限错误，这是因为安装过程需要向系统目录中写入文件，而当前打开命令行环境的用户不具备该权限。可以通过右键选择“更多-以管理员身份运行”打开x64 Native Tools Command Prompt for VS 2022终端，执行
 
-```
-nmake install
+```pwsh
+cmake --install build
 ```
 
 那么`gmssl`命令行程序、头文件和库文件分别被写入`C:/Program Files/GmSSL/bin`、`C:/Program Files/GmSSL/include`、`C:/Program Files/GmSSL/lib`这几个系统目录中。为了能够直接在命令行环境任意目录下执行`gmssl`命令行程序，需要将其安装目录加入到系统路径中，可以执行：
 
-```bash
+```batch
 set path=%path%;C:\Program Files\GmSSL\bin
 ```
 
@@ -127,11 +123,10 @@ set path=%path%;C:\Program Files\GmSSL\bin
 
 在安装完Visual Studio之后，在启动菜单栏中会出现Visual Studio菜单目录，其中包含x64 Native Tools Command Prompt for VS 2022等多个终端命令行环境菜单项。
 
-```bash
+```pwsh
 C:\Program Files\Microsoft Visual Studio\2022\Community>cd /path/to/gmssl
-mkdir build
-cd build
-cmake ..
+# 此处`-G`可以不显式指定, 因为cmake在windows上使用MSBuild作为默认generator
+cmake -B build # -G "Visual Studio 17 2022"
 ```
 
 完成后可以看到CMake在`build`目录下生成了一个`GmSSL.sln`文件和大量的`.vcxproj`文件。
@@ -179,15 +174,13 @@ cp "/cygdrive/c/Users/Guan Zhi/Downloads/GmSSL-master.zip" ~/
 ```bash
 unzip GmSSL-master.zip
 cd GmSSL-master
-mkdir build
-cd build
-cmake ..
-make
-make test
-make install
+cmake -B build
+cmake --build build
+ctest --test-dir build
+cmake --install build # --prefix /path
 ```
 
-注意，由于在Cygwin环境中用户本身具有系统权限，因此在执行`make install`时不需要`sudo`。
+注意，由于在Cygwin环境中用户本身具有系统权限，因此在执行`cmake --install`时不需要`sudo`。
 
 在安装完成之后，可以在Cygwin的命令行环境下执行`gmssl`命令行，或者运行源代码`demo`目录下的演示脚本。
 
@@ -218,7 +211,7 @@ cmake --build . --config Release
 ```bash
 mkdir build; cd build
 cmake .. -DCMAKE_TOOLCHAIN_FILE=$NDK/build/cmake/android.toolchain.cmake  -DANDROID_ABI=arm64-v8a  -DANDROID_PLATFORM=android-23
-make
+cmake --build .
 ```
 
 ## 安装包构建
@@ -258,23 +251,33 @@ make package
 
 在正式发布之前，需要在测试平台上编译、测试、安装。验证`gmssl`命令行可以正确使用，验证`sm3_demo.c`可以正确和`-lgmssl`编译，并且可以正确输出哈希值。
 
-完成编译和测试后，在`build`目录下执行如下操作
+完成编译和测试后，进行编译打包操作。
 
-``` bash
-#!/bin/bash -x
-VERSION=3.2.0
-OS=macos
-ARCH=arm64
-mkdir build; cd build; cmake ..; make
-cmake .. -DBUILD_SHARED_LIBS=OFF; make
-mkdir gmssl-$VERSION
-cd gmssl-$VERSION
-mkdir bin; mkdir lib; mkdir include
-cp ../bin/gmssl bin
-cp -P ../bin/libgmssl* lib
-cp -r ../../include/gmssl include
-cd ..
-tar czvf gmssl-$VERSION-$OS-$ARCH.tar.gz gmssl-$VERSION
+### 生成开发压缩包
+
+对于需要打包多模式 (`Debug`, `Release`, `RelWithDebInfo`) 的 (主要为Windows平台，因为`MSVC`的`Debug`/`Release`标准库运行时独立)，可以根据以下示例进行操作。示例中脚本需要环境中存在ninja。
+
+```shell
+cmake -B build -G "Ninja Multi-Config" -DCMAKE_CONFIGURATION_TYPES="Debug;Release" -DBUILD_SHARED_LIBS=OFF -DCMAKE_DEBUG_POSTFIX="d"
+cd build
+cmake --build . --config Debug
+cmake --build . --config Release
+cpack -C "Debug;Release" # -G TGZ
 ```
 
-其中`cmake .. -DBUILD_SHARED_LIBS=OFF; make`重新生成了静态库，以及和静态库连接的`gmssl`二进制程序，因此最终打包的`gmssl`命令行不依赖系统库之外的动态库。
+其中指定`BUILD_SHARED_LIBS=OFF`重新生成了静态库，以及和静态库连接的`gmssl`二进制程序，因此最终打包的`gmssl`命令行不依赖系统库之外的动态库。
+
+### 在CMake中进行依赖
+
+GmSSL库较为简单，只需将对应头文件路径与所需链接库配置进target即可。但目前也已支持了Modern CMake的依赖方式。
+
+假设我们将以上打包内容解压至`/path/GmSSL-3.1.2-win64`
+
+```cmake
+set(GmSSL_ROOT "/path/GmSSL-3.1.2-win64")
+find_package(GmSSL REQUIRED) # required表示必须找到，否则报错
+
+# `MyTarget` is created by `add_library` or `add_executable`
+target_link_libraries(MyTarget GmSSL::GmSSL)
+```
+通过以上配置，即可正常使用GmSSL。
