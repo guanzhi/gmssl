@@ -490,7 +490,7 @@ bad:
 		}
 	}
 	if (gen_subject_key_id) {
-		if (x509_exts_add_subject_key_identifier_ex(exts, &extslen, sizeof(exts), -1, &sm2_key) != 1) {
+		if (x509_exts_add_subject_key_identifier_ex(exts, &extslen, sizeof(exts), -1, &subject_public_key) != 1) {
 			fprintf(stderr, "%s: set SubjectKeyIdentifier extension failure\n", prog);
 			goto end;
 		}
