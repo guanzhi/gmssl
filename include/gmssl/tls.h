@@ -54,7 +54,7 @@ int tls_length_is_zero(size_t len);
 
 typedef enum {
 	TLS_protocol_tlcp			= 0x0101,
-	TLS_protocol_ssl2			= 0x0200,
+	TLS_protocol_ssl2			= 0x0002,
 	TLS_protocol_ssl3			= 0x0300,
 	TLS_protocol_tls1			= 0x0301,
 	TLS_protocol_tls11			= 0x0302,
