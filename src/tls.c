@@ -1476,16 +1476,14 @@ int tls_record_send(const uint8_t *record, size_t recordlen, tls_socket_t sock)
 			recordlen -= n;
 
 		} else if (n == 0) {
-			if (errno == EAGAIN || errno == EWOULDBLOCK) {
-				tls_socket_wait();
-			} else {
+			if ((errno != EAGAIN && errno != EWOULDBLOCK)
+			    || tls_socket_wait_send(sock)) {
 				error_puts("TCP connection closed");
 				return 0;
 			}
 		} else {
-			if (errno == EAGAIN || errno == EWOULDBLOCK) {
-				tls_socket_wait();
-			} else {
+			if ((errno != EAGAIN && errno != EWOULDBLOCK)
+			    || tls_socket_wait_send(sock)) {
 				error_print();
 				return -1;
 			}
@@ -1514,8 +1512,13 @@ int tls_record_recv(uint8_t *record, size_t *recordlen, tls_socket_t sock)
 				if (len == 5) {
 					return -EAGAIN;
 				}
-				tls_socket_wait();
 			} else {
+				perror("recv");
+				error_print();
+				return -1;
+			}
+
+			if (tls_socket_wait_recv(sock)) {
 				perror("recv");
 				error_print();
 				return -1;
@@ -1548,9 +1551,8 @@ int tls_record_recv(uint8_t *record, size_t *recordlen, tls_socket_t sock)
 			*recordlen = 0;
 			return 0;
 		} else {
-			if (errno == EAGAIN || errno == EWOULDBLOCK) {
-				tls_socket_wait();
-			} else {
+			if ((errno != EAGAIN && errno != EWOULDBLOCK)
+			    || tls_socket_wait_recv(sock)) {
 				perror("recv");
 				error_print();
 				return -1;

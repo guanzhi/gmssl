@@ -168,3 +168,21 @@ int tls_socket_accept(tls_socket_t sock, struct sockaddr_in *addr, tls_socket_t 
 	return 1;
 }
 #endif
+
+int tls_socket_wait_recv(tls_socket_t sock)
+{
+	fd_set readfds;
+	FD_ZERO(&readfds);
+	FD_SET(sock, &readfds);
+
+	return select(sock+1, &readfds, NULL, NULL, NULL);
+}
+
+int tls_socket_wait_send(tls_socket_t sock)
+{
+	fd_set writefds;
+	FD_ZERO(&writefds);
+	FD_SET(sock, &writefds);
+
+	return select(sock+1, NULL, &writefds, NULL, NULL);
+}
